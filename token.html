@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bulk Token Parser</title>
+  <style>
+    body {
+      background-color: #444;
+      font-family: Arial, sans-serif;
+      color: white;
+      text-align: center;
+      padding-top: 50px;
+    }
+
+    #output {
+      margin-top: 20px;
+      white-space: pre-wrap;
+      color: #000;
+      background: #fff;
+      padding: 15px;
+      border-radius: 5px;
+      display: none;
+    }
+
+    input, button {
+      margin: 10px;
+      padding: 10px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Bulk Token Formatter</h2>
+  <input type="file" id="fileInput" accept=".txt">
+  <br>
+  <button onclick="processFile()">Convert and Download</button>
+
+  <div id="output"></div>
+
+  <script>
+    function processFile() {
+      const fileInput = document.getElementById("fileInput");
+      if (!fileInput.files[0]) {
+        alert("Please select a .txt file first.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const lines = e.target.result.split(/\r?\n/);
+        let output = "";
+
+        lines.forEach(line => {
+          if (!line.trim()) return; // Skip empty lines
+
+          const parts = line.split("|").map(p => p.split(":"));
+          const data = {};
+          parts.forEach(([key, ...rest]) => {
+            data[key] = rest.join(":"); // Handle colons inside token
+          });
+
+          const mac = data["mac"] || "unknown_mac";
+          const rid = data["rid"] || "unknown_rid";
+          const token = data["token"] || "missing_token";
+
+          output += `${token}||${mac}|${rid}||0|||\n`;
+        });
+
+        downloadTextFile(output, "formatted_output.txt");
+      };
+
+      reader.readAsText(fileInput.files[0]);
+    }
+
+    function downloadTextFile(text, filename) {
+      const blob = new Blob([text], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+
+</body>
+</html>
